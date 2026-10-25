@@ -5,7 +5,7 @@
 #
 #   --weights full    (the default) upstream TensorFold at engine/UPSTREAM with the opt-in patches in
 #                     engine/patches: the native server and drama3-generate, in build/tensorfold
-#   --weights nvfp4   CUDA: engine/nvfp4/UPSTREAM, unpatched native server.
+#   --weights nvfp4   CUDA: engine/nvfp4/UPSTREAM plus its patches, native server.
 #                     Metal: engine/nvfp4/macos/UPSTREAM plus its patches, native server and voice tools.
 #                     Both use plotarmordev/drama-3-NVFP4-Pruned, in build/tensorfold-nvfp4.
 #
@@ -48,6 +48,7 @@ case $weights in
     ;;
   nvfp4)
     pin=$repo/engine/nvfp4/UPSTREAM build=${1:-$repo/build/tensorfold-nvfp4}
+    patch_dir=$repo/engine/nvfp4/patches
     targets=(native)
     if [[ $platform == Darwin ]]; then
       pin=$repo/engine/nvfp4/macos/UPSTREAM
