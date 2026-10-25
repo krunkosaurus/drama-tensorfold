@@ -68,6 +68,21 @@ patches=()
 if [[ -n $patch_dir ]]; then
   patches=("$patch_dir"/*.patch)
   ((${#patches[@]})) || die "$patch_dir has no *.patch files"
+  [[ -f $patch_dir/SHA256SUMS ]] || die "$patch_dir has no SHA256SUMS manifest"
+  manifest_pattern='^[[:xdigit:]]{64}  ([^/[:space:]]+\.patch)$'
+  listed_patches=()
+  while IFS= read -r manifest_line || [[ -n $manifest_line ]]; do
+    [[ $manifest_line =~ $manifest_pattern ]] || die "invalid patch manifest entry"
+    listed_patches+=("${BASH_REMATCH[1]}")
+  done < "$patch_dir/SHA256SUMS"
+  ((${#listed_patches[@]} == ${#patches[@]})) || die "patch manifest must list every selected patch exactly once"
+  for patch in "${patches[@]}"; do
+    matches=0
+    for listed_patch in "${listed_patches[@]}"; do
+      if [[ $listed_patch == "${patch##*/}" ]]; then matches=$((matches + 1)); fi
+    done
+    ((matches == 1)) || die "patch manifest must list every selected patch exactly once"
+  done
   if command -v sha256sum >/dev/null; then
     (cd "$patch_dir" && sha256sum -c SHA256SUMS) || die "patch checksum verification failed"
   else

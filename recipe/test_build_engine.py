@@ -119,6 +119,24 @@ else:
         self.assertIn('has no *.patch files', result.stderr)
         self.assertFalse(target.exists())
 
+    def test_manifest_covers_exactly_the_selected_patches(self):
+        directory = self.repo / self.series['cuda'] / 'patches'
+        manifest = directory / 'SHA256SUMS'
+        original = manifest.read_text()
+        unlisted = directory / '0002-unlisted.patch'
+        unlisted.write_bytes((self.repo / self.series['metal'] / 'patches/0001-fixture.patch').read_bytes())
+        result, target = self.build('Linux', 'nvfp4')
+        self.assertNotEqual(result.returncode, 0, 'an unlisted patch must never be applied')
+        self.assertFalse(target.exists())
+        unlisted.unlink()
+        for content in (original + original, original.replace('0001-fixture.patch', 'missing.patch'),
+                        original + hashlib.sha256(b'notes').hexdigest() + '  README.md\n'):
+            with self.subTest(manifest=content):
+                manifest.write_text(content)
+                result, target = self.build('Linux', 'nvfp4')
+                self.assertNotEqual(result.returncode, 0)
+                self.assertFalse(target.exists())
+
     def test_rebuild_reapplies_the_same_cuda_patch(self):
         first, target = self.build('Linux', 'nvfp4')
         self.assertEqual(first.returncode, 0, first.stderr)
