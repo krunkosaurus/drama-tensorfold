@@ -37,6 +37,12 @@ tokens and the existing size/reference limits remain rejected. In the legacy
 CUDA long-form path, continuation segments retain the active speaker across
 automatic cuts, forced paragraph boundaries and redraws.
 
+The legacy CUDA splitter keeps its existing character, segment, prompt and
+frame limits. It does not adopt the MLX chunker's policy of at most three
+distinct speakers per chunk. Accepting sixteen valid speaker IDs does not
+qualify the acoustic quality of sixteen speakers in a single chunk. The
+full-model and Metal profiles do not gain a long-form splitter from this patch.
+
 The public [Sogni-AI/drama3-mlx prompt tests](https://github.com/Sogni-AI/drama3-mlx/blob/ecc235039ccd5f982f66a6982184f57432354ab4/tests/test_prompt.py#L38)
 provide the behavioral reference. These changes extend TensorFold's existing
 native prompt builder without copying Fish-derived Python implementation code.
