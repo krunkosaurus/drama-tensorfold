@@ -43,6 +43,26 @@ distinct speakers per chunk. Accepting sixteen valid speaker IDs does not
 qualify the acoustic quality of sixteen speakers in a single chunk. The
 full-model and Metal profiles do not gain a long-form splitter from this patch.
 
+## Known full-model stopping limitation
+
+On one GB10 with the pinned CUDA full-model profile, this page's two-speaker
+example reached the 1024-frame cap (47.55 seconds, `X-Finish-Reason: length`)
+in three of five seeds with a matching reference catalog. The same text without
+speaker tags stopped normally in all five. Relabeling both references and input
+to speakers 0/1 still reached the cap in two of five seeds; using the tagged
+input without a reference catalog did so in one of five. Neither variation is a
+reliable workaround.
+
+The CUDA NVFP4 profile, with its default guidance, stopped normally on all five
+tagged and all five untagged requests in this small check. The engine pins,
+weights and guidance differ, so these observations do not establish the cause
+or a guarantee for NVFP4. Metal was not tested in this follow-up. See the
+[settings and per-seed results](../results/dialogue-stopping-20261030.json).
+
+Treat `X-Finish-Reason: length` as an incomplete generation. The cause remains
+unresolved; accepting a speaker tag does not guarantee natural termination.
+The investigation is tracked in [issue #32](https://github.com/plotarmordev/drama-tensorfold/issues/32).
+
 The public [Sogni-AI/drama3-mlx prompt tests](https://github.com/Sogni-AI/drama3-mlx/blob/ecc235039ccd5f982f66a6982184f57432354ab4/tests/test_prompt.py#L38)
 provide the behavioral reference. These changes extend TensorFold's existing
 native prompt builder without copying Fish-derived Python implementation code.
